@@ -1,0 +1,47 @@
+pipeline{
+    agent {
+        docker {
+            image 'python:2.7.16-slim'
+        }
+    }
+
+    stages{
+        stage('build'){
+            when{
+                changeset '**/vote/**'
+            }
+            steps{
+                echo 'Installing dependencies'
+                dir('worker'){
+                    sh 'pip install -i requirements.txt'
+                }
+                
+            }
+        }
+        
+        stage('test'){
+            when{
+                changeset '**/vote/**'
+            }
+            steps{
+               echo 'Running Unit Tests on vote app' 
+               dir('worker'){
+                    sh 'nosetests -v'
+                }              
+            }
+        }
+        
+    }
+    
+    post{
+        always{
+            echo 'Build pipeline for vote app is completed...'
+        }
+        failure{
+            slackSend (channel: "#cloud-devops-jenkins", message: "Build failed ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+        }
+        success{
+            slackSend (channel: "#cloud-devops-jenkins", message: "Build succeeded ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+        }
+    }
+}
