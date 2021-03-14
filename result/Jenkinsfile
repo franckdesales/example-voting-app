@@ -47,7 +47,7 @@ pipeline{
             echo 'Build pipeline for result app is completed...'
         }
         failure{
-            slackSend (channel: "#cloud-devops-jenkins", message: "Build failed ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+            slackSend (channel: "#cloud-devops-jenkins", message: "Build    failed ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
         }
         success{
             slackSend (channel: "#cloud-devops-jenkins", message: "Build succeeded ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
