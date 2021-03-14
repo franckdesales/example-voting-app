@@ -1,0 +1,56 @@
+pipeline{
+    
+    agent none
+
+    stages{
+        stage('build'){
+            when{
+                changeset '**/result/**'
+            }
+            agent {
+                docker {
+                    image 'node:8.16.0-alpine'
+                }
+            }
+            steps{
+                echo 'Build..'
+                dir('result'){
+                    sh 'npm install'
+                }
+                
+            }
+        }
+        
+
+        stage('docker-package'){
+            agent any
+            when{
+                changeset "**/result/**"
+                branch 'master'
+            }
+            steps{
+                echo 'Packaging result app with docker'
+                script{
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerlogin') {
+                        def workerImage = docker.build("franckabdullah/result:v${env.BUILD_ID}", "./result")
+                        workerImage.push()
+                        workerImage.push("${env.BRANCH_NAME}")
+                        workerImage.push("latest")
+                    }
+                }
+            }
+        }    
+    }
+    
+    post{
+        always{
+            echo 'Build pipeline for result app is completed...'
+        }
+        failure{
+            slackSend (channel: "#cloud-devops-jenkins", message: "Build failed ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+        }
+        success{
+            slackSend (channel: "#cloud-devops-jenkins", message: "Build succeeded ${env.JOB_NAME} ${env.BUILD_NUMBER} (<${env.BUILD_URL}|Open>)")
+        }
+    }
+}
