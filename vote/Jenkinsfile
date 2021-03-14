@@ -1,15 +1,17 @@
 pipeline{
-    agent {
-        docker {
-            image 'python:2.7.16-slim'
-            args '--user root'
-        }
-    }
+    
+    agent none
 
     stages{
         stage('build'){
             when{
                 changeset '**/vote/**'
+            }
+            agent {
+                docker {
+                    image 'python:2.7.16-slim'
+                    args '--user root'
+                }
             }
             steps{
                 echo 'Installing dependencies'
@@ -24,6 +26,12 @@ pipeline{
             when{
                 changeset '**/vote/**'
             }
+            agent {
+                docker {
+                    image 'python:2.7.16-slim'
+                    args '--user root'
+                }
+            }
             steps{
                echo 'Running Unit Tests on vote app' 
                dir('vote'){
@@ -31,7 +39,25 @@ pipeline{
                 }              
             }
         }
-        
+
+        stage('docker-package'){
+            agent any
+            when{
+                changeset "**/vote/**"
+                branch 'master'
+            }
+            steps{
+                echo 'Packaging vote app with docker'
+                script{
+                    docker.withRegistry('https://index.docker.io/v1/', 'dockerlogin') {
+                        def workerImage = docker.build("franckabdullah/vote:v${env.BUILD_ID}", "./vote")
+                        workerImage.push()
+                        workerImage.push("${env.BRANCH_NAME}")
+                        workerImage.push("latest")
+                    }
+                }
+            }
+        }    
     }
     
     post{
