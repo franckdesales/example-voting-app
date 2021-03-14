@@ -21,24 +21,6 @@ pipeline{
                 
             }
         }
-        
-        stage('test'){
-            when{
-                changeset '**/vote/**'
-            }
-            agent {
-                docker {
-                    image 'python:2.7.16-slim'
-                    args '--user root'
-                }
-            }
-            steps{
-               echo 'Running Unit Tests on vote app' 
-               dir('vote'){
-                    sh 'nosetests -v'
-                }              
-            }
-        }
 
         stage('docker-package'){
             agent any
