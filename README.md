@@ -1,4 +1,4 @@
-Example Voting App
+Example Voting App mod
 =========
 
 This is a sample instavote application.
